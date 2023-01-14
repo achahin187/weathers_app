@@ -1,0 +1,52 @@
+# config/packages/security.yaml
+security:
+    enable_authenticator_manager: true
+    # ...
+    password_hashers:
+          symfony\components\Security\Core\User\PasswordAuthenticatedUserInterface : 'auto'
+          App\Entity\User:
+            algorithm: auto
+    providers:
+         app_user_provider:
+            entity:
+                class: App\Entity\User
+                property : email
+        
+
+    firewalls:
+        login:
+            pattern: ^/api/login
+            stateless: true
+            provider: app_user_provider
+            json_login:
+                  username_path : email
+                  check_path: /api/login_check
+                  success_handler: lexik_jwt_authentication.handler.authentication_success
+                  failure_handler: lexik_jwt_authentication.handler.authentication_failure
+            custom_authenticator: App\Security\UserAuthenticator
+            logout:
+                path: app_logout
+                # where to redirect after logout
+                # target: app_any_route
+      
+
+        api:
+            pattern: ^/api
+            stateless: true
+            jwt: ~
+            entry_point: jwt
+            refresh_jwt:
+                check_path: /api/token/refresh
+        dev: 
+           pattern: ^/(_(profiler|wdt)| CSS | images | js)/
+           security: false    
+
+        main:
+           lazy: true
+           provider: app_user_provider
+
+
+    access_control:
+        - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/token/refresh, roles: IS_AUTHENTICATED_ANONYMOUSLY }
