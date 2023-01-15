@@ -18,11 +18,12 @@ use Symfony\Component\Routing\RouterInterface;
 use App\Factory\JsonResponseFactory;
 
 
+
 class WeatherController extends AbstractController
 {
 
 
-    private $WeatherRepository;
+    /*   private $WeatherRepository;
     private $entityManager;
 
 
@@ -32,7 +33,7 @@ class WeatherController extends AbstractController
     ) {
         $this->WeatherRepository = $WeatherRepository;
         $this->entityManager = $entityManager;
-    }
+    } */
 
     #[Route('/api/weather', name: 'app_weather')]
     public function index(): Response
@@ -72,11 +73,21 @@ class WeatherController extends AbstractController
 
 
     #[Route('/api/get_weather_today/{id}', name: 'get_weather_today')]
-    public function get_weather_today(Request $request, $id): Response
+
+    public function get_weather_today(ManagerRegistry $doctrine, int  $id): Response
     {
+        $Weather = $doctrine->getRepository(Weather::class)->find($id);
 
-        $Weather = $this->WeatherRepository->find($id);
+        if (!$Weather) {
 
-        return $this->json($Weather, 200);
+            return $this->json('No Weather found for id' . $id, 404);
+        }
+
+        $data =  [
+            'id' => $Weather->getId(),
+            'name' => $Weather->getData(),
+        ];
+
+        return $this->json($data);
     }
 }
